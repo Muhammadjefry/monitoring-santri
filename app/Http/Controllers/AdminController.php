@@ -37,8 +37,67 @@ class AdminController extends Controller
 
         $santris = Santri::with('user')->get();
 
-        return view('admin.santri', compact('santris', 'role', 'profile'));
+        // Hitung jumlah santri per blok
+        $countBlokA = Santri::where('kamar', 'like', 'A-%')->count();
+        $countBlokB = Santri::where('kamar', 'like', 'B-%')->count();
+        $countBlokC = Santri::where('kamar', 'like', 'C-%')->count();
+        $countBlokD = Santri::where('kamar', 'like', 'D-%')->count();
+
+        return view('admin.santri', compact(
+            'santris',
+            'role',
+            'profile',
+            'countBlokA',
+            'countBlokB',
+            'countBlokC',
+            'countBlokD'
+        ));
     }
+
+    public function detailSantri(Request $request)
+    {
+        if (!session()->has('role')) {
+            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $userId = session('user_id');
+        $profile = DB::table('users')
+            ->join('admin', 'admin.user_id', '=', 'users.id')
+            ->where('users.id', $userId)
+            ->select('users.id as user_id', 'users.username', 'admin.nama', 'admin.foto')
+            ->first();
+        $role = session('role');
+        // Ambil type dari query string: Blok-A / Blok-B / Blok-C / Blok-D
+        $type = $request->query('type'); // contoh: "Blok-A"
+
+        // Peta type -> prefix kamar
+        $map = [
+            'Blok-A' => 'A',
+            'Blok-B' => 'B',
+            'Blok-C' => 'C',
+            'Blok-D' => 'D',
+        ];
+
+        if (!isset($map[$type])) {
+            return redirect()->route('admin.santri')
+                ->with('error', 'Parameter tipe blok tidak valid.');
+        }
+
+        $prefix = $map[$type];
+
+        // Ambil santri sesuai blok (A-*, B-*, C-*, D-*)
+        $santris = Santri::with('user')
+            ->where('kamar', 'like', $prefix . '-%')
+            ->orderBy('kamar')
+            ->orderBy('nama')
+            ->get();
+
+        // (opsional) hitung total untuk judul
+        $total = $santris->count();
+
+        return view('admin.santriDetail', compact('santris', 'role', 'profile', 'type', 'total'));
+    }
+
     public function showOrtu()
     {
         if (!session()->has('role')) {
@@ -60,9 +119,20 @@ class AdminController extends Controller
 
     // Santri
 
+    private function typeFromKamar(?string $kamar): string
+    {
+        $prefix = strtoupper(substr((string) $kamar, 0, 1));
+        return match ($prefix) {
+            'A' => 'Blok-A',
+            'B' => 'Blok-B',
+            'C' => 'Blok-C',
+            'D' => 'Blok-D',
+            default => 'Blok-A', // fallback aman
+        };
+    }
+
     public function store(Request $request)
     {
-        // Validasi
         $request->validate([
             'username' => 'required',
             'password' => 'required',
@@ -70,34 +140,42 @@ class AdminController extends Controller
             'kamar'    => 'required',
         ]);
 
-        $existingUsername = User::where('username', $request->username)->first();
-        $existingNama     = Santri::where('nama', $request->nama)->first();
-        $existingKamar    = Santri::where('kamar', $request->kamar)->first();
+        // Cek duplikasi (kalau mau, batasi username ke role SANTRI)
+        $existingUsername = User::where('username', $request->username)->exists();
+        $existingNama     = Santri::where('nama', $request->nama)->exists();
+
+        $type = $this->typeFromKamar($request->kamar);
 
         if ($existingUsername) {
-            return redirect()->route('admin.santri')->with('error', 'Username sudah digunakan. Silakan coba yang lain.');
+            return redirect()
+                ->route('admin.santriDetail', ['type' => $type])
+                ->withInput()
+                ->with('error', 'Username sudah digunakan. Silakan coba yang lain.');
         }
         if ($existingNama) {
-            return redirect()->route('admin.santri')->with('error', 'Nama sudah digunakan. Silakan coba yang lain.');
+            return redirect()
+                ->route('admin.santriDetail', ['type' => $type])
+                ->withInput()
+                ->with('error', 'Nama sudah digunakan. Silakan coba yang lain.');
         }
-        if ($existingKamar) {
-            return redirect()->route('admin.santri')->with('error', 'Kamar sudah digunakan. Silakan coba yang lain.');
-        }
-        // Simpan ke tabel users
+
+        // Simpan
         $user = User::create([
             'username' => $request->username,
             'password' => Hash::make($request->password),
             'role'     => 'SANTRI',
         ]);
 
-        // Simpan ke tabel santri
         Santri::create([
             'user_id' => $user->id,
             'nama'    => $request->nama,
             'kamar'   => $request->kamar,
         ]);
 
-        return redirect()->back()->with('success', 'Santri berhasil ditambahkan!');
+        // Arahkan ke detail blok sesuai kamar
+        return redirect()
+            ->route('admin.santriDetail', ['type' => $type])
+            ->with('success', 'Santri berhasil ditambahkan!');
     }
 
     public function update(Request $request, $id)
@@ -105,43 +183,53 @@ class AdminController extends Controller
         $request->validate([
             'username' => 'required',
             'nama'     => 'required',
+            'kamar'    => 'required',
         ]);
 
-        $user = User::findOrFail($id);
+        $user   = User::findOrFail($id);
         $santri = Santri::where('user_id', $id)->firstOrFail();
 
-
-        $existingUsername = User::where(function ($query) use ($request) {
-            $query->where('username', $request->username);
-        })
+        // Cek duplikasi, abaikan record dirinya sendiri
+        $existingUsername = User::where('username', $request->username)
             ->where('id', '!=', $user->id)
-            ->first();
+            ->exists();
 
-        $existingNama = Santri::where(function ($query) use ($request) {
-            $query->where('nama', $request->nama);
-        })
-
+        $existingNama = Santri::where('nama', $request->nama)
             ->where('id', '!=', $santri->id)
-            ->first();
+            ->exists();
 
-        if ($existingUsername || $existingNama) {
-            return redirect()->route('admin.santri')
-                ->with('error', 'Username atau nama sudah digunakan, silakan coba yang lain.');
+
+        // Type diarahkan berdasar 'kamar' yang diminta saat update
+        $type = $this->typeFromKamar($request->kamar);
+
+        if ($existingUsername) {
+            return redirect()
+                ->route('admin.santriDetail', ['type' => $type])
+                ->withInput()
+                ->with('error', 'Username sudah digunakan, silakan coba yang lain.');
+        }
+        if ($existingNama) {
+            return redirect()
+                ->route('admin.santriDetail', ['type' => $type])
+                ->withInput()
+                ->with('error', 'Nama sudah digunakan, silakan coba yang lain.');
         }
 
-        // Update kedua tabel
+
+        // Update
         $user->update([
             'username' => $request->username,
         ]);
-
         $santri->update([
-            'nama' => $request->nama,
+            'nama'  => $request->nama,
             'kamar' => $request->kamar,
         ]);
 
-
-        return redirect()->route('admin.santri')->with('success', 'Data berhasil diperbarui.');
+        return redirect()
+            ->route('admin.santriDetail', ['type' => $type])
+            ->with('success', 'Data berhasil diperbarui.');
     }
+
     public function destroy(Request $request)
     {
         $id = $request->id;
@@ -158,8 +246,12 @@ class AdminController extends Controller
         }
 
         $user->delete();
+        // Type diarahkan berdasar 'kamar' yang diminta saat update
+        $type = $this->typeFromKamar($request->kamar);
 
-        return redirect()->route('admin.santri')->with('success', 'User dan data terkait berhasil dihapus!');
+        return redirect()
+            ->route('admin.santriDetail', ['type' => $type])
+            ->with('success', 'User dan data terkait berhasil dihapus.');
     }
 
     public function resetPassword(Request $request)
@@ -173,7 +265,12 @@ class AdminController extends Controller
         $user->password = bcrypt('123');
         $user->save();
 
-        return redirect()->route('admin.santri')->with('success', 'Password berhasil di-reset menjadi 123.');
+        // Type diarahkan berdasar 'kamar' yang diminta saat update
+        $type = $this->typeFromKamar($request->kamar);
+
+        return redirect()
+            ->route('admin.santriDetail', ['type' => $type])
+            ->with('success', 'Password berhasil di-reset menjadi 123.');
     }
 
 

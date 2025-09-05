@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Jadwal Kegiatan')
+@section('title', 'User Santri')
 
 @section('style')
 <style>
@@ -66,20 +66,15 @@
 @section('content')
 <div class="app-content-header">
   <div class="container-fluid">
-    <h5 class="mb-3">Jadwal Kegiatan Santri</h5>
-    @php
-    $role = session('role');
-
-    if ($role === 'ADMINISTRATOR'){
-
-    @endphp
-
-    <button onclick="modal_add()" class="btn btn-primary m-0">Tambah Jadwal</button>
-
-    @php } @endphp
+    <h5 class="mb-3">Data Santri — {{ $type }}</h5>
+    <div class="col-md-12 d-flex justify-content-between">
+      <button onclick="modal_add()" class="btn btn-primary m-0">Tambah Santri</button>
+      <a href="{{ route('admin.santri') }}" class="btn btn-secondary m-0 {{ request()->routeIs('admin.santri') ? 'active' : '' }}">
+        <i class="bi bi-arrow-counterclockwise me-3"></i>Kembali
+      </a>
+    </div>
   </div>
 </div>
-
 
 
 
@@ -88,12 +83,6 @@
 
     <div class="row">
       <div class="col-md-12">
-
-        @php
-        $role = session('role');
-        if ($role === 'ADMINISTRATOR'){
-
-        @endphp
 
         @if (session('success'))
         <div class="d-flex justify-content-between alertt alert-succees slide-down" id="alert-succees">
@@ -119,65 +108,43 @@
         </div>
         @endif
 
-        @php } @endphp
-
         <div class="card mb-4">
 
           <div class="card-body">
             <table id="myTable" class="table table-bordered">
               <thead>
                 <tr>
-                  <th style="width: 10px">#</th>
-                  <th>Tanggal</th>
-                  <th>Nama Kegiatan</th>
-                  <th>Waktu Mulai</th>
-                  <th>Waktu Selesai</th>
-
-                  @php
-                  $role = session('role');
-                  if ($role === 'ADMINISTRATOR'){
-
-                  @endphp
-
+                  <th>#</th>
+                  <th>Username</th>
+                  <th>Nama</th>
+                  <th>Kamar</th>
                   <th>Aksi</th>
-                  @php
-                  }
-                  @endphp
-
                 </tr>
               </thead>
               <tbody>
-
-                @foreach ($jadwals as $i => $jadwal)
+                @foreach ($santris as $i => $santri)
                 <tr>
                   <td>{{ $i + 1 }}</td>
-                  <td>{{ $jadwal->tanggal }}</td>
-                  <td>{{ $jadwal->judul_kegiatan }}</td>
-                  <td>{{ $jadwal->waktu_mulai }}</td>
-                  <td>{{ $jadwal->waktu_selesai }}</td>
-
-                  @php
-                  $role = session('role');
-                  if ($role === 'ADMINISTRATOR'){
-
-                  @endphp
+                  <td>{{ $santri->user->username }}</td>
+                  <td>{{ $santri->nama }}</td>
+                  <td>{{ $santri->kamar }}</td>
                   <td class="d-flex justify-content-center gap-2">
                     <button
                       class="btn btn-warning btn-sm"
                       title="Edit Data"
                       data-bs-toggle="modal"
                       data-bs-target="#modal-edit"
-                      onclick="modal_edit('{{ $jadwal->id }}', '{{ $jadwal->tanggal }}', '{{ $jadwal->judul_kegiatan }}', '{{ $jadwal->waktu_mulai }}', '{{ $jadwal->waktu_selesai }}')">
+                      onclick="modal_edit('{{ $santri->user->id }}', '{{ $santri->user->username }}', '{{ $santri->nama }}', '{{ $santri->kamar }}')">
                       <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button onclick="modal_hapus('{{ $jadwal->id }}')" class="btn btn-danger btn-sm" title="Delete Data">
+                    <button onclick="modal_hapus('{{ $santri->user->id }}')" class="btn btn-danger btn-sm" title="Delete Data">
                       <i class="bi bi-trash"></i>
                     </button>
 
+                    <button onclick="resetPassword('{{ $santri->user->id }}')" class="btn btn-secondary btn-sm" title="Reset Password">
+                      <i class="bi bi-lock-fill"></i>
+                    </button>
                   </td>
-                  @php
-                  }
-                  @endphp
                 </tr>
                 @endforeach
               </tbody>
@@ -197,39 +164,63 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header d-flex justify-content-between">
-        <h5 class="modal-title">Tambah jadwal kegiatan</h5>
+        <h5 class="modal-title">Tambah Santri</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <form action="{{ route('jadwal.store') }}" method="POST">
+      <form action="{{ route('admin_santri.store') }}" method="POST">
         @csrf
         <div class="modal-body">
+          <input type="hidden" name="role" value="SANTRI">
 
-          <div class="mb-3">
-            <label class="mb-1">Tanggal :</label>
-            <input type="date" name="tanggal" class="form-control" placeholder="Ketik di sini" required>
+          <div class="mb-2">
+            <label class="mb-1">Username:</label>
+            <input type="text" name="username" class="form-control" placeholder="Ketik di sini" required>
           </div>
 
-          <div class="mb-3">
-            <label class="mb-1">Nama Kegiatan :</label>
-            <select name="judul_kegiatan" class="form-select" required>
-              <option value="">-- Pilih Kegiatan --</option>
-              <option value="Tadarus">Tadarus</option>
-              <option value="Tarawih">Tarawih</option>
+          <div class="mb-2">
+            <label class="mb-1">Nama:</label>
+            <input type="text" name="nama" class="form-control" placeholder="Ketik di sini">
+          </div>
+
+          @php
+          // Peta kamar per blok
+          $rooms = [
+          'A' => ['A-01','A-02','A-03','A-04'],
+          'B' => ['B-01','B-02','B-03','B-04'],
+          'C' => ['C-01','C-02','C-03'],
+          'D' => ['D-01','D-02','D-03'],
+          ];
+
+          // Ambil prefix blok dari variabel $type (contoh: "Blok-A" -> "A")
+          $prefix = isset($type) ? substr($type, -1) : null;
+
+          // Jika ada $type valid, tampilkan hanya kamar blok itu; kalau tidak, tampilkan semua
+          $roomsToShow = ($prefix && isset($rooms[$prefix]))
+          ? $rooms[$prefix]
+          : array_merge(...array_values($rooms));
+          @endphp
+
+          <div class="mb-2">
+            <label class="mb-1">Kamar :</label>
+            <select name="kamar" class="form-select mb-2" required>
+              <option value="">-- Pilih Kamar --</option>
+              @foreach ($roomsToShow as $room)
+              <option value="{{ $room }}"
+                {{ old('kamar') === $room ? 'selected' : '' }}>
+                {{ $room }}
+              </option>
+              @endforeach
             </select>
           </div>
 
-          <div class="mb-3">
-            <label class="mb-1">Waktu Mulai :</label>
-            <input type="time" name="waktu_mulai" class="form-control" placeholder="Ketik di sini" required>
+
+
+          <div class="password-wrapper mb-2">
+            <label class="mb-1">Password:</label>
+            <input type="password" name="password" class="form-control" id="password" placeholder="Password" required />
+            <span class="toggle-password" onclick="togglePassword()" id="toggleIcon">🙈</span>
           </div>
-
-          <div class="mb-3">
-            <label class="mb-1">Waktu Selesai :</label>
-            <input type="time" name="waktu_selesai" class="form-control" placeholder="Ketik di sini" required>
-          </div>
-
-
         </div>
 
         <div class="modal-footer">
@@ -245,43 +236,59 @@
 <!-- Modal Edit -->
 <div class="modal fade" id="modal-edit" tabindex="-1">
   <div class="modal-dialog">
-
-
     <form id="form-edit" method="POST">
       @csrf
       @method('PUT')
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Edit Jadwal</h5>
+          <h5 class="modal-title">Edit Pengguna</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="edit-id" name="id">
 
           <div class="mb-2">
-            <label class="mb-1">Tanggal :</label>
-            <input type="date" id="edit-tanggal" name="tanggal" class="form-control mb-2" placeholder="Username">
+            <label class="mb-1">Username :</label>
+            <input type="text" id="edit-username" name="username" class="form-control mb-2" placeholder="Username">
           </div>
 
-          <div class="mb-3">
-            <label class="mb-1">Nama Kegiatan :</label>
-            <select id="edit-judul_kegiatan" name="judul_kegiatan" class="form-select mb-2" required>
-              <option value="">-- Pilih Kegiatan --</option>
-              <option value="Tadarus">Tadarus</option>
-              <option value="Tarawih">Tarawih</option>
+          <div class="mb-2">
+            <label for="nama" class="mb-1">Nama :</label>
+            <input type="text" id="edit-nama" name="nama" class="form-control mb-2" placeholder="Nama">
+          </div>
+
+          @php
+          // Peta kamar per blok
+          $rooms = [
+          'A' => ['A-01','A-02','A-03','A-04'],
+          'B' => ['B-01','B-02','B-03','B-04'],
+          'C' => ['C-01','C-02','C-03'],
+          'D' => ['D-01','D-02','D-03'],
+          ];
+
+          // Ambil prefix blok dari variabel $type (contoh: "Blok-A" -> "A")
+          $prefix = isset($type) ? substr($type, -1) : null;
+
+          // Jika ada $type valid, tampilkan hanya kamar blok itu; kalau tidak, tampilkan semua
+          $roomsToShow = ($prefix && isset($rooms[$prefix]))
+          ? $rooms[$prefix]
+          : array_merge(...array_values($rooms));
+          @endphp
+
+          <div class="mb-2">
+            <label class="mb-1">Kamar :</label>
+            <select name="kamar" id="edit-kamar" class="form-select mb-2" required>
+              <option value="">-- Pilih Kamar --</option>
+              @foreach ($roomsToShow as $room)
+              <option value="{{ $room }}"
+                {{ old('kamar') === $room ? 'selected' : '' }}>
+                {{ $room }}
+              </option>
+              @endforeach
             </select>
           </div>
 
 
-
-          <div class="mb-2">
-            <label class="mb-1">Waktu Mulai :</label>
-            <input type="time" id="edit-waktu_mulai" name="waktu_mulai" class="form-control mb-2" placeholder="Kamar">
-          </div>
-          <div class="mb-2">
-            <label class="mb-1">Waktu Selesai :</label>
-            <input type="time" id="edit-waktu_selesai" name="waktu_selesai" class="form-control mb-2" placeholder="Kamar">
-          </div>
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-success">Simpan</button>
@@ -295,7 +302,7 @@
 <!-- Modal Hapus -->
 <div class="modal fade" id="modal-hapus" tabindex="-1">
   <div class="modal-dialog">
-    <form method="POST" action="{{ route('jadwal.delete') }}">
+    <form method="POST" action="{{ route('admin_santri.delete') }}">
       @csrf
       <div class="modal-content">
         <div class="modal-header">
@@ -303,7 +310,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body text-center">
-          <p>Anda yakin ingin menghapus jadwal ini?</p>
+          <p>Anda yakin ingin menghapus user ini?</p>
           <input type="hidden" name="id" id="hapus-id">
         </div>
         <div class="modal-footer">
@@ -315,6 +322,28 @@
 </div>
 
 
+<!-- Modal Reset Password -->
+<div class="modal fade" id="modal-reset" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ route('admin_santri.reset_password') }}">
+      @csrf
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Konfirmasi Reset Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <p>Anda yakin ingin mereset password user ini?</p>
+          <input type="hidden" name="id" id="reset-id">
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-warning">Ya, Reset</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 
 @endsection
 
@@ -325,18 +354,19 @@
   function modal_add() {
     $('#modal-add').modal('show');
     $('#modal-add  form')[0].reset();
-    $('#modal-add .modal-title').text('Tambah Jadwal');
+    $('#modal-add select[name="kamar"]').val('');
+    $('#modal-add .modal-title').text('Tambah Santri');
   }
 
-  function modal_edit(id, tanggal, judul_kegiatan, waktu_mulai, waktu_selesai) {
+  function modal_edit(id, username, nama, kamar) {
     $('#edit-id').val(id);
-    $('#edit-tanggal').val(tanggal);
-    $('#edit-judul_kegiatan').val(judul_kegiatan);
-    $('#edit-waktu_mulai').val(waktu_mulai);
-    $('#edit-waktu_selesai').val(waktu_selesai);
+    $('#edit-username').val(username);
+    $('#edit-nama').val(nama);
+    $('#edit-kamar').val(kamar);
 
-    // Set action URL dengan id
-    $('#form-edit').attr('action', '/admin/jadwalKegiatan/' + id);
+    // Set form action secara dinamis
+    let url = `/admin/santri/${id}`;
+    $('#form-edit').attr('action', url);
 
     $('#modal-edit').modal('show');
   }
@@ -344,6 +374,11 @@
   function modal_hapus(id) {
     $('#modal-hapus').modal('show');
     $('#hapus-id').val(id);
+  }
+
+  function resetPassword(id) {
+    $('#modal-reset').modal('show');
+    $('#reset-id').val(id);
   }
 
   function close_modal() {

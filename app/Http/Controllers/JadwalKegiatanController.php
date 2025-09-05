@@ -53,7 +53,7 @@ class JadwalKegiatanController extends Controller
         if (strtotime($request->tanggal) < strtotime(date('Y-m-d'))) {
             return redirect()->route('admin.jadwal')
                 ->withInput()
-                ->with('error', 'Tanggal tidak boleh kurang dari hari ini.');
+                ->with('error', 'Tidak bisa memasukan tanggal yang terlewat, silahkan masukan tanggal hari ini atau yang akan datang.');
         }
 
         if (strtotime($request->waktu_selesai) <= strtotime($request->waktu_mulai)) {
@@ -91,6 +91,12 @@ class JadwalKegiatanController extends Controller
             'waktu_mulai' => 'required',
             'waktu_selesai' => 'required',
         ]);
+
+        if (strtotime($request->tanggal) < strtotime(date('Y-m-d'))) {
+            return redirect()->route('admin.jadwal')
+                ->withInput()
+                ->with('error', 'Tidak bisa memasukan tanggal yang terlewat, silahkan masukan tanggal hari ini atau yang akan datang.');
+        }
 
         if (strtotime($request->waktu_selesai) <= strtotime($request->waktu_mulai)) {
             return redirect()->route('admin.jadwal')

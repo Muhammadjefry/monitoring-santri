@@ -155,7 +155,12 @@
                       @csrf
                       @method('PUT')
                       <input type="hidden" name="laporan_id" value="{{ $laporan->id }}">
-                      <input type="file" name="bukti_laporan" required>
+
+                      <div class="mb-2">
+                        <input type="file" name="bukti_laporan" accept=".jpg,.jpeg,.png" required class="form-control form-control-sm" onchange="if(this.files[0].size > 2 * 1024 * 1024){ alert('File maksimal 2MB'); this.value=''; }" />
+                        <small class="text-muted">Format: JPG, JPEG, PNG — maksimal 2MB</small>
+                      </div>
+
                       <button class="btn btn-warning btn-sm mt-1" type="submit">Update</button>
                     </form>
                     @endif
@@ -163,7 +168,11 @@
                     <form action="{{ route('laporan.upload') }}" method="POST" enctype="multipart/form-data">
                       @csrf
                       <input type="hidden" name="jadwal_id" value="{{ $jadwal->id }}">
-                      <input type="file" name="bukti_laporan" required>
+                      <div class="mb-2">
+                        <input type="file" name="bukti_laporan" accept=".jpg,.jpeg,.png" required class="form-control form-control-sm" onchange="if(this.files[0].size > 2 * 1024 * 1024){ alert('File maksimal 2MB'); this.value=''; }" />
+                        <small class="text-muted">Format: JPG, JPEG, PNG — maksimal 2MB</small>
+                      </div>
+
                       <button class="btn btn-success btn-sm mt-1" type="submit">Upload Laporan</button>
                     </form>
                     @else

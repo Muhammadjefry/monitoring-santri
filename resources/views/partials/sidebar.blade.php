@@ -84,8 +84,8 @@
         <li class="nav-header">Users</li>
 
         @if($role === 'ADMINISTRATOR')
-        <li class="nav-item {{ request()->routeIs('admin.santri') || request()->routeIs('admin.ortu') ? 'menu-open' : '' }}">
-          <a href="#" class="nav-link  text-white {{ request()->routeIs('admin.santri') || request()->routeIs('admin.ortu') ? 'active' : '' }}">
+        <li class="nav-item {{ request()->routeIs('admin.santri', 'admin.santriDetail') || request()->routeIs('admin.ortu') ? 'menu-open' : '' }}">
+          <a href="#" class="nav-link  text-white {{ request()->routeIs('admin.santri', 'admin.santriDetail') || request()->routeIs('admin.ortu') ? 'active' : '' }}">
             <i class="nav-icon bi bi-people"></i>
             <p>
               Akun Pengguna
@@ -94,7 +94,7 @@
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="{{ route('admin.santri') }}" class="nav-link text-white {{ request()->routeIs('admin.santri') ? 'active' : '' }}">
+              <a href="{{ route('admin.santri') }}" class="nav-link text-white {{ request()->routeIs('admin.santri', 'admin.santriDetail') ? 'active' : '' }}">
                 <i class="nav-icon bi bi-circle"></i>
                 <p>Santri</p>
               </a>

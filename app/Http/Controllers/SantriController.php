@@ -68,11 +68,24 @@ class SantriController extends Controller
     public function uploadLaporan(Request $request)
     {
         $request->validate([
-            'jadwal_id' => 'required|exists:jadwal_kegiatan,id',
-            'keterangan' => 'nullable|string|in:Izin,Sakit,Haid',
-            'bukti_laporan' => 'required_without:keterangan|nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
+            'jadwal_id'      => 'required|exists:jadwal_kegiatan,id',
+            'keterangan'     => 'nullable|string|in:Izin,Sakit,Haid',
+            'bukti_laporan'  => 'required_without:keterangan|nullable',
         ]);
+        // Kalau ada file tapi bukan valid (fallback manual)
 
+        if ($request->hasFile('bukti_laporan')) {
+            $file = $request->file('bukti_laporan');
+
+
+            // cek ekstensi
+            $allowed = ['jpg', 'jpeg', 'png'];
+            if (!in_array($file->getClientOriginalExtension(), $allowed)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Format file harus JPG atau PNG.');
+            }
+        }
         $userId = session('user_id');
         $santri = Santri::where('user_id', $userId)->first();
         if (!$santri) {
@@ -106,13 +119,28 @@ class SantriController extends Controller
 
     public function update(Request $request)
     {
+        // update
         $request->validate([
-            'laporan_id' => 'required|exists:laporan,id',
-            'keterangan' => 'nullable|string|in:Izin,Sakit,Haid',
-            'bukti_laporan' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'laporan_id'     => 'required|exists:laporan,id',
+            'keterangan'     => 'nullable|string|in:Izin,Sakit,Haid',
+            'bukti_laporan'  => 'nullable',
         ]);
 
+
         $laporan = Laporan::find($request->laporan_id);
+
+        // Kalau ada file tapi bukan valid (fallback manual)
+        if ($request->hasFile('bukti_laporan')) {
+            $file = $request->file('bukti_laporan');
+
+            // cek ekstensi
+            $allowed = ['jpg', 'jpeg', 'png'];
+            if (!in_array($file->getClientOriginalExtension(), $allowed)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Format file harus JPG atau PNG.');
+            }
+        }
 
         // Siapkan data yang akan diupdate
         $data = [

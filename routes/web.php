@@ -77,6 +77,7 @@ Route::get('/admin/rekap/laporan/detail/{santri_id}', [AdminController::class, '
 
 Route::post('/admin/send-rekap/{santri}', [AdminController::class, 'sendRekapPdf'])->name('admin.send.rekap');
 Route::get('/admin/laporan/rekapType', [AdminController::class, 'typeLaporan'])->name('admin.rekapType');
+Route::get('/admin/santri/detail', [AdminController::class, 'detailSantri'])->name('admin.santriDetail');
 
 // Route::get('/admin/rekap/laporan/pdf/{santri_id}', [AdminController::class, 'generatePdfRekap'])->name('admin.rekap.pdf');
 

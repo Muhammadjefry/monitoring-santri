@@ -67,19 +67,14 @@
 <div class="app-content-header">
   <div class="container-fluid">
     <h5 class="mb-3">Data Santri</h5>
-    <button onclick="modal_add()" class="btn btn-primary m-0">Tambah Santri</button>
   </div>
 </div>
 
 
-
-
 <div class="app-content">
   <div class="container-fluid">
-
     <div class="row">
       <div class="col-md-12">
-
         @if (session('success'))
         <div class="d-flex justify-content-between alertt alert-succees slide-down" id="alert-succees">
           <div>
@@ -104,219 +99,95 @@
         </div>
         @endif
 
-        <div class="card mb-4">
-
-          <div class="card-body">
-            <table id="myTable" class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Username</th>
-                  <th>Nama</th>
-                  <th>Kamar</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach ($santris as $i => $santri)
-                <tr>
-                  <td>{{ $i + 1 }}</td>
-                  <td>{{ $santri->user->username }}</td>
-                  <td>{{ $santri->nama }}</td>
-                  <td>{{ $santri->kamar }}</td>
-                  <td class="d-flex justify-content-center gap-2">
-                    <button
-                      class="btn btn-warning btn-sm"
-                      title="Edit Data"
-                      data-bs-toggle="modal"
-                      data-bs-target="#modal-edit"
-                      onclick="modal_edit('{{ $santri->user->id }}', '{{ $santri->user->username }}', '{{ $santri->nama }}', '{{ $santri->kamar }}')">
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button onclick="modal_hapus('{{ $santri->user->id }}')" class="btn btn-danger btn-sm" title="Delete Data">
-                      <i class="bi bi-trash"></i>
-                    </button>
-
-                    <button onclick="resetPassword('{{ $santri->user->id }}')" class="btn btn-secondary btn-sm" title="Reset Password">
-                      <i class="bi bi-lock-fill"></i>
-                    </button>
-                  </td>
-                </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
-        </div>
-
 
       </div>
-    </div>
-  </div>
-</div>
 
+      <div class="col-lg-3 col-6">
+        <div class="small-box text-bg-primary">
+          <div class="inner">
+            <h3>{{ $countBlokA }}</h3>
+            <p>Kamar Blok A</p>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" class="small-box-icon" fill="currentColor" class="bi bi-house-add-fill" viewBox="0 0 16 16">
+            <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 1 1-1 0v-1h-1a.5.5 0 1 1 0-1h1v-1a.5.5 0 0 1 1 0" />
+            <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z" />
+            <path d="m8 3.293 4.712 4.712A4.5 4.5 0 0 0 8.758 15H3.5A1.5 1.5 0 0 1 2 13.5V9.293z" />
+          </svg>
 
-<!-- // Modal Tambah Santri -->
-<div class="modal fade" id="modal-add" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header d-flex justify-content-between">
-        <h5 class="modal-title">Tambah Santri</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <a
+            href="{{ route('admin.santriDetail', ['type' => 'Blok-A']) }}"
+            class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
+            More info <i class="bi bi-link-45deg"></i>
+          </a>
+        </div>
       </div>
 
-      <form action="{{ route('admin_santri.store') }}" method="POST">
-        @csrf
-        <div class="modal-body">
-          <input type="hidden" name="role" value="SANTRI">
-
-          <div class="mb-2">
-            <label class="mb-1">Username:</label>
-            <input type="text" name="username" class="form-control" placeholder="Ketik di sini" required>
+      <div class="col-lg-3 col-6">
+        <div class="small-box text-bg-success">
+          <div class="inner">
+            <h3>{{ $countBlokB }}</h3>
+            <p>Kamar Blok B</p>
           </div>
 
-          <div class="mb-2">
-            <label class="mb-1">Nama:</label>
-            <input type="text" name="nama" class="form-control" placeholder="Ketik di sini">
-          </div>
-
-          <div class="mb-2">
-            <label class="mb-1">Kamar :</label>
-            <select name="kamar" class="form-control mb-2" required>
-              <option value="">-- Pilih Kamar --</option>
-              <option value="A-01">A-01</option>
-              <option value="A-02">A-02</option>
-              <option value="A-03">A-03</option>
-              <option value="A-04">A-04</option>
-              <option value="B-01">B-01</option>
-              <option value="B-02">B-02</option>
-              <option value="B-03">B-03</option>
-              <option value="B-04">B-04</option>
-              <option value="C-01">C-01</option>
-              <option value="C-02">C-02</option>
-              <option value="C-03">C-03</option>
-              <option value="D-01">D-01</option>
-              <option value="D-02">D-02</option>
-              <option value="D-03">D-03</option>
-            </select>
-          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" class="small-box-icon" fill="currentColor" class="bi bi-house-add-fill" viewBox="0 0 16 16">
+            <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 1 1-1 0v-1h-1a.5.5 0 1 1 0-1h1v-1a.5.5 0 0 1 1 0" />
+            <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z" />
+            <path d="m8 3.293 4.712 4.712A4.5 4.5 0 0 0 8.758 15H3.5A1.5 1.5 0 0 1 2 13.5V9.293z" />
+          </svg>
 
 
-          <div class="password-wrapper mb-2">
-            <label class="mb-1">Password:</label>
-            <input type="password" name="password" class="form-control" id="password" placeholder="Password" required />
-            <span class="toggle-password" onclick="togglePassword()" id="toggleIcon">🙈</span>
-          </div>
+          <a
+            href="{{ route('admin.santriDetail', ['type' => 'Blok-B']) }}"
+            class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
+            More info <i class="bi bi-link-45deg"></i>
+          </a>
         </div>
+      </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
+
+      <div class="col-lg-3 col-6">
+        <div class="small-box text-bg-warning">
+          <div class="inner">
+            <h3>{{ $countBlokC }}</h3>
+            <p>Kamar Blok C</p>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" class="small-box-icon" fill="currentColor" class="bi bi-house-add-fill" viewBox="0 0 16 16">
+            <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 1 1-1 0v-1h-1a.5.5 0 1 1 0-1h1v-1a.5.5 0 0 1 1 0" />
+            <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z" />
+            <path d="m8 3.293 4.712 4.712A4.5 4.5 0 0 0 8.758 15H3.5A1.5 1.5 0 0 1 2 13.5V9.293z" />
+          </svg>
+          <a
+            href="{{ route('admin.santriDetail', ['type' => 'Blok-C']) }}"
+            class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
+            More info <i class="bi bi-link-45deg"></i>
+          </a>
         </div>
-      </form>
+      </div>
+
+
+      <div class="col-lg-3 col-6">
+        <div class="small-box text-bg-danger">
+          <div class="inner">
+            <h3>{{ $countBlokD }}</h3>
+            <p>Kamar Blok D</p>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" class="small-box-icon" fill="currentColor" class="bi bi-house-add-fill" viewBox="0 0 16 16">
+            <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 1 1-1 0v-1h-1a.5.5 0 1 1 0-1h1v-1a.5.5 0 0 1 1 0" />
+            <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z" />
+            <path d="m8 3.293 4.712 4.712A4.5 4.5 0 0 0 8.758 15H3.5A1.5 1.5 0 0 1 2 13.5V9.293z" />
+          </svg>
+          <a
+            href="{{ route('admin.santriDetail', ['type' => 'Blok-D']) }}"
+            class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
+            More info <i class="bi bi-link-45deg"></i>
+          </a>
+        </div>
+      </div>
 
     </div>
   </div>
 </div>
 
-<!-- Modal Edit -->
-<div class="modal fade" id="modal-edit" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="form-edit" method="POST">
-      @csrf
-      @method('PUT')
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Pengguna</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="edit-id" name="id">
-
-          <div class="mb-2">
-            <label class="mb-1">Username :</label>
-            <input type="text" id="edit-username" name="username" class="form-control mb-2" placeholder="Username">
-          </div>
-
-          <div class="mb-2">
-            <label for="nama" class="mb-1">Nama :</label>
-            <input type="text" id="edit-nama" name="nama" class="form-control mb-2" placeholder="Nama">
-          </div>
-
-          <div class="mb-2">
-            <label class="mb-1">Kamar :</label>
-            <select id="edit-kamar" name="kamar" class="form-control mb-2" required>
-              <option value="">-- Pilih Kamar --</option>
-              <option value="A-01">A-01</option>
-              <option value="A-02">A-02</option>
-              <option value="A-03">A-03</option>
-              <option value="A-04">A-04</option>
-              <option value="B-01">B-01</option>
-              <option value="B-02">B-02</option>
-              <option value="B-03">B-03</option>
-              <option value="B-04">B-04</option>
-              <option value="C-01">C-01</option>
-              <option value="C-02">C-02</option>
-              <option value="C-03">C-03</option>
-              <option value="D-01">D-01</option>
-              <option value="D-02">D-02</option>
-              <option value="D-03">D-03</option>
-            </select>
-          </div>
-
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">Simpan</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-
-<!-- Modal Hapus -->
-<div class="modal fade" id="modal-hapus" tabindex="-1">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ route('admin_santri.delete') }}">
-      @csrf
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Konfirmasi Hapus</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body text-center">
-          <p>Anda yakin ingin menghapus user ini?</p>
-          <input type="hidden" name="id" id="hapus-id">
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-danger">Hapus</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-
-<!-- Modal Reset Password -->
-<div class="modal fade" id="modal-reset" tabindex="-1">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ route('admin_santri.reset_password') }}">
-      @csrf
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Konfirmasi Reset Password</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body text-center">
-          <p>Anda yakin ingin mereset password user ini?</p>
-          <input type="hidden" name="id" id="reset-id">
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-warning">Ya, Reset</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
 
 
 @endsection
@@ -325,57 +196,11 @@
 <script>
   let table = new DataTable('#myTable');
 
-  function modal_add() {
-    $('#modal-add').modal('show');
-    $('#modal-add  form')[0].reset();
-    $('#modal-add .modal-title').text('Tambah Santri');
-  }
-
-  function modal_edit(id, username, nama, kamar) {
-    $('#edit-id').val(id);
-    $('#edit-username').val(username);
-    $('#edit-nama').val(nama);
-    $('#edit-kamar').val(kamar);
-
-    // Set form action secara dinamis
-    let url = `/admin/santri/${id}`;
-    $('#form-edit').attr('action', url);
-
-    $('#modal-edit').modal('show');
-  }
-
-  function modal_hapus(id) {
-    $('#modal-hapus').modal('show');
-    $('#hapus-id').val(id);
-  }
-
-  function resetPassword(id) {
-    $('#modal-reset').modal('show');
-    $('#reset-id').val(id);
-  }
-
-  function close_modal() {
-    $('.modal').modal('hide');
-  }
-
   function close_alert() {
     $('.alertt').remove();
   }
 
 
-  // Toggle password visibility
-  function togglePassword() {
-    const pass = document.getElementById("password");
-    const icon = document.getElementById("toggleIcon");
-
-    if (pass.type === "password") {
-      pass.type = "text";
-      icon.textContent = "👁️"; // mata terbuka
-    } else {
-      pass.type = "password";
-      icon.textContent = "🙈"; // mata tertutup
-    }
-  }
 
   window.addEventListener('DOMContentLoaded', () => {
     const alert1 = document.getElementById('alert-succees');
